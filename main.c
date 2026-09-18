@@ -1,65 +1,43 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <curl/curl.h>
 
-typedef struct {
-    char *data;
-    size_t size;
-} Response;
-
-// *data zeigt auf die neuen Daten von libcurl
-// nmemb = Number of Members
-size_t write_callback(char *data, size_t size, size_t nmemb, void *userdata) {
-    // userdata ist der Pointer, den wir über CURLOPT_WRITEDATA übergeben haben
-    Response *response = userdata;
-    // Tatsächliche Anzahl der neu empfangenen Bytes
-    size_t len = size * nmemb;
-    // Buffer vergrößern: bisherige Daten + neue Daten + '\0'
-    char *ptr = realloc(response->data, response->size + len + 1);
-    if (!ptr) return 0;
-
-    response->data = ptr; // neue Addresse des Speichers mit mehr Platz
-    memcpy(response->data + response->size, data, len);
-    response->size += len;
-    // Null-Terminator setzen, damit response->data ein gültiger C-String ist
-    response->data[response->size] = '\0';
-    return len;
-}
-
+#include "cJSON.h"
+#include "http.h"
 
 int main(void) {
-    CURL *curl = curl_easy_init();
-    CURLcode result;
+    HttpResponse response = http_get("http://192.168.0.104:8096/System/Info/Public");
 
-    if (curl == NULL) {
-        fprintf(stderr, "Could not initialize curl\n");
+    if (!response.success) {
+        fprintf(stderr, "HTTP request failed\n");
+        http_response_free(&response);
         return 1;
     }
 
-    Response response = {
-        .data = NULL,
-        .size = 0,
-    };
+    if (response.status >= 400) {
+        fprintf(stderr, "HTTP error: %ld\n", response.status);
 
-    curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.0.104:8096/System/Info/Public");
-    // Funktion festlegen, die empfangene Daten verarbeitet
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-    // &response wird als userdata an write_callback weitergegeben
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-    result = curl_easy_perform(curl);
+        if (response.data != NULL) {
+            fprintf(stderr, "Response: %s\n", response.data);
+        }
 
-    if (result != CURLE_OK) {
-        fprintf(stderr, "curl error: %s\n", curl_easy_strerror(result));
-
-        free(response.data);
-        curl_easy_cleanup(curl);
+        http_response_free(&response);
         return 1;
     }
 
-    printf("%s\n", response.data);
-    free(response.data);
-    curl_easy_cleanup(curl);
+    cJSON *json = cJSON_Parse(response.data);
+    if (json == NULL) {
+        fprintf(stderr, "Could not parse JSON\n");
+        return 1;
+    }
+    char *result = cJSON_Print(json);
+
+    if (result != NULL) {
+        printf("%s\n", result);
+        free(result);
+    }
+
+    cJSON_Delete(json);
+    http_response_free(&response);
 
     return 0;
 }

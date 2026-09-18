@@ -5,6 +5,7 @@ set(CMAKE_C_STANDARD 11)
 
 find_package(CURL REQUIRED)
 
-add_executable(jellyplex main.c)
+add_executable(jellyplex main.c http.c
+        cJSON.c)
 
 target_link_libraries(jellyplex PRIVATE CURL::libcurl)
