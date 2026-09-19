@@ -13,17 +13,21 @@
 static size_t write_callback(char *data, size_t size, size_t nmemb, void *userdata) {
     // userdata ist der Pointer, den wir über CURLOPT_WRITEDATA übergeben haben
     HttpResponse *response = userdata;
+
     // Tatsächliche Anzahl der neu empfangenen Bytes
     size_t len = size * nmemb;
+
     // Buffer vergrößern: bisherige Daten + neue Daten + '\0'
     char *ptr = realloc(response->data, response->size + len + 1);
     if (!ptr) return 0;
 
     response->data = ptr; // neue Addresse des Speichers mit mehr Platz
     memcpy(response->data + response->size, data, len);
+
     response->size += len;
     // Null-Terminator setzen, damit response->data ein gültiger C-String ist
     response->data[response->size] = '\0';
+    
     return len;
 }
 

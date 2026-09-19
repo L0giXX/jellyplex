@@ -19,9 +19,9 @@
 ### Jellyfin
 
 * [x] JSON-Parser hinzufügen (z. B. cJSON)
-* [ ] JSON-Parser in `http.c` / `http.h` auslagern (Response Funktion)
-* [ ] `/System/Info/Public` parsen
-* [ ] Servername und Version ausgeben
+* [x] JSON-Parser in `http.c` / `http.h` auslagern (Response Funktion)
+* [x] `/System/Info/Public` parsen
+* [x] Servername und Version ausgeben
 * [ ] Jellyfin API-Token über HTTP-Header mitsenden
 * [ ] Eigene `jellyfin.c` / `jellyfin.h` erstellen
 * [ ] Filmliste des Benutzers abrufen

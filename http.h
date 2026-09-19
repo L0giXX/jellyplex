@@ -13,10 +13,19 @@ typedef struct {
     int success;
 } HttpResponse;
 
-// Führt einen GET-Request aus
+/**
+ * Makes a GET request to the specified url.
+ *
+ * @param url: The url where the request which should be sent to
+ * @return: Returns a HttpResponse struct
+ */
 HttpResponse http_get(const char *url);
 
-// Gibt Speicher einer Response wieder frei
+/**
+ * Frees the memory allocated for an HttpResponse.
+ *
+ * @param response: The HttpResponse which should be freed
+ */
 void http_response_free(HttpResponse *response);
 
 #endif //JELLYPLEX_HTTP_H

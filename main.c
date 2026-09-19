@@ -1,43 +1,15 @@
-#include <stdlib.h>
-#include <curl/curl.h>
+#include <stdio.h>
 
-#include "cJSON.h"
-#include "http.h"
+#include "jellyfin.h"
 
 int main(void) {
-    HttpResponse response = http_get("http://192.168.0.104:8096/System/Info/Public");
+    const char *url = "http://192.168.0.104:8096";
+    JellyfinServerInfo response = jellyfin_get_server_info(url);
 
-    if (!response.success) {
-        fprintf(stderr, "HTTP request failed\n");
-        http_response_free(&response);
-        return 1;
-    }
+    printf("%s\n", response.name);
+    printf("%s\n", response.version);
 
-    if (response.status >= 400) {
-        fprintf(stderr, "HTTP error: %ld\n", response.status);
-
-        if (response.data != NULL) {
-            fprintf(stderr, "Response: %s\n", response.data);
-        }
-
-        http_response_free(&response);
-        return 1;
-    }
-
-    cJSON *json = cJSON_Parse(response.data);
-    if (json == NULL) {
-        fprintf(stderr, "Could not parse JSON\n");
-        return 1;
-    }
-    char *result = cJSON_Print(json);
-
-    if (result != NULL) {
-        printf("%s\n", result);
-        free(result);
-    }
-
-    cJSON_Delete(json);
-    http_response_free(&response);
+    jellyfin_free_server_info(&response);
 
     return 0;
 }
